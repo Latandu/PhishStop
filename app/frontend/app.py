@@ -274,9 +274,7 @@ with tab2:
             tmp_file.write(uploaded_file.getvalue())
             tmp_path = tmp_file.name
         try:
-            # Display email preview
             with st.expander("Email Preview", expanded=False):
-                from phishstop.data_processing.feature_extraction import FeatureExtraction
                 fe = FeatureExtraction()
                 features = fe.process_eml(tmp_path)
                 
