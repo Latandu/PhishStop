@@ -15,7 +15,7 @@ class PreprocessingPipeline:
         """Build preprocessing pipeline for numeric features"""
 
         log_features = [
-            "num_exclamation_marks", "num_uppercase_words", "num_malicious_links"
+            "num_exclamation_marks", "num_malicious_links"
         ]
         
         numeric_features = [
