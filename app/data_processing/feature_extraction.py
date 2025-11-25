@@ -79,7 +79,7 @@ class FeatureExtraction():
         """Load malicious domains from text files."""
         try:
             if txt_files is None:
-                txt_files = ['full-domains-aa.txt', 'full-domains-ab.txt']
+                txt_files = ['data/phishing_domains/full-domains-aa.txt', 'data/phishing_domains/full-domains-ab.txt']
             
             malicious_domains = set()
             

@@ -6,11 +6,8 @@ __pycache__/
 *.csv
 phishstop/maildir/
 *.parquet
-*.pkl
-*.json
 *.npy
 *.npy
-*.pth
 wandb/
 phishstop/models/checkpoints/
 phishstop/models/logs/

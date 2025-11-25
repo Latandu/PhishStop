@@ -1,0 +1,119 @@
+{
+  "experiment_config": {
+    "random_seed": 42,
+    "train_split": 0.6,
+    "test_split": 0.2,
+    "external_split": 0.2,
+    "data_source": "emails_v4.parquet",
+    "numeric_features": [
+      "sender_domain_entropy",
+      "has_attachment",
+      "spf_flag_missing",
+      "dkim_flag_missing",
+      "return_path_domain_missing",
+      "num_links",
+      "subject_length",
+      "body_length",
+      "keyword_count",
+      "num_received_headers",
+      "num_exclamation_marks",
+      "num_malicious_links"
+    ],
+    "embedding_model": "all-MiniLM-L6-v2",
+    "embedding_dim": 384,
+    "svd_components": 100,
+    "tfidf_max_features": 5000,
+    "tfidf_ngram_range": [
+      1,
+      2
+    ],
+    "tfidf_min_df": 5,
+    "tfidf_max_df": 0.8,
+    "lr_max_iter": 1000,
+    "lr_C": 1.0,
+    "xgb_max_depth": 9,
+    "xgb_n_estimators": 300,
+    "xgb_learning_rate": 0.1,
+    "xgb_min_child_weight": 7,
+    "xgb_subsample": 0.85,
+    "xgb_colsample_bytree": 0.85,
+    "xgb_early_stopping": 20,
+    "mlp_feature_hidden_dim": 32,
+    "mlp_dropout": 0.3,
+    "mlp_lr": 0.001,
+    "mlp_weight_decay": 0.0001,
+    "mlp_epochs": 50,
+    "mlp_batch_size": 64,
+    "mlp_early_stopping": 10
+  },
+  "data_splits": {
+    "train_size": 127107,
+    "test_size": 42369,
+    "external_size": 42637
+  },
+  "model_performance": {
+    "tfidf": {
+      "test": {
+        "accuracy": 0.9703792867426656,
+        "precision": 0.9656741346541496,
+        "recall": 0.9621829450246757,
+        "f1": 0.9639253787116617,
+        "roc_auc": 0.995184886340581
+      },
+      "external": {
+        "accuracy": 0.8411942678893919,
+        "precision": 0.9329978566769174,
+        "recall": 0.7896833221595615,
+        "f1": 0.8553792263824516,
+        "roc_auc": 0.8606027706754946
+      }
+    },
+    "xgboost": {
+      "test": {
+        "accuracy": 0.9768226769572093,
+        "precision": 0.9758652621831231,
+        "recall": 0.9675771835188798,
+        "f1": 0.9717035500230521,
+        "roc_auc": 0.9971855467790101
+      },
+      "external": {
+        "accuracy": 0.8683537772357343,
+        "precision": 0.9619127830806663,
+        "recall": 0.8107425957329337,
+        "f1": 0.8798818720708768,
+        "roc_auc": 0.9094399612423482
+      }
+    },
+    "mlp": {
+      "test": {
+        "accuracy": 0.9794425169345512,
+        "precision": 0.9796048438495857,
+        "recall": 0.9702169172500861,
+        "f1": 0.9748882802364134,
+        "roc_auc": 0.9973650332490662
+      },
+      "external": {
+        "accuracy": 0.8556183596406877,
+        "precision": 0.9606986899563319,
+        "recall": 0.7895255747919706,
+        "f1": 0.8667417092388952,
+        "roc_auc": 0.9194135488282876
+      }
+    }
+  },
+  "feature_names": [
+    "sender_domain_entropy",
+    "has_attachment",
+    "spf_flag_missing",
+    "dkim_flag_missing",
+    "return_path_domain_missing",
+    "num_links",
+    "subject_length",
+    "body_length",
+    "keyword_count",
+    "num_received_headers",
+    "num_exclamation_marks",
+    "num_malicious_links"
+  ],
+  "timestamp": "2025-11-25T17:47:03.614488"
+}
