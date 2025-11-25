@@ -8,8 +8,8 @@ import os
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 import xgboost as xgb
-from app.models.hybrid_mlp_model import HybridMLPClassifier
-from app.data_processing.feature_extraction import FeatureExtraction
+from models.hybrid_mlp_model import HybridMLPClassifier
+from data_processing.feature_extraction import FeatureExtraction
 
 # Set page config
 st.set_page_config(
@@ -24,17 +24,17 @@ st.set_page_config(
 def load_models():
     """Load all three models"""
     # 1. Load TF-IDF model
-    with open('phishstop/models/saved_models/tfidf_vectorizer.pkl', 'rb') as f:
+    with open('output/saved_models/tfidf_vectorizer.pkl', 'rb') as f:
         tfidf_vectorizer = pickle.load(f)
-    with open('phishstop/models/saved_models/tfidf_classifier.pkl', 'rb') as f:
+    with open('output/saved_models/tfidf_classifier.pkl', 'rb') as f:
         tfidf_model = pickle.load(f)
     
     # 2. Load Hybrid XGBoost model
     xgb_model = xgb.XGBClassifier()
-    xgb_model.load_model('phishstop/models/saved_models/xgboost_hybrid.json')
+    xgb_model.load_model('output/saved_models/xgboost_hybrid.json')
     
     # 3. Load Hybrid MLP model and configuration
-    with open('phishstop/models/saved_artifacts/experiment_config.json', 'r') as f:
+    with open('output/saved_artifacts/experiment_config.json', 'r') as f:
         config = json.load(f)
     
     hybrid_config = config['experiment_config']
@@ -44,7 +44,7 @@ def load_models():
         feature_hidden_dim=hybrid_config['mlp_feature_hidden_dim'],
         dropout=hybrid_config['mlp_dropout']
     )
-    checkpoint = torch.load('phishstop/models/saved_models/mlp_hybrid.pth', map_location='cpu')
+    checkpoint = torch.load('output/saved_models/mlp_hybrid.pth', map_location='cpu')
     hybrid_model.load_state_dict(checkpoint['model_state_dict'])
     hybrid_model.eval()
     

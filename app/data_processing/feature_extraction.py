@@ -5,7 +5,7 @@ import mailbox
 import polars as pl
 import logging
 from email.header import decode_header, make_header
-from html_transformer import HTMLTransformer
+from .html_transformer import HTMLTransformer
 from helpers.transformers import ReceiverTransformer
 from helpers.transformers import AuthResultsParser
 from helpers.transformers import SenderTransformer
