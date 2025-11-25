@@ -112,8 +112,7 @@ class FeatureExtraction():
 
         df = df.with_columns([
             pl.col("spf_flag").fill_null("").str.to_lowercase().is_in(["fail", "softfail", "none", "temperror"]).cast(pl.Int8).alias("spf_flag_missing"),
-            pl.col("dkim_flag").fill_null("").str.to_lowercase().is_in(["fail", "none", "temperror"]).cast(pl.Int8).alias("dkim_flag_missing"),
-            ((pl.col("return_path_domain").is_null()) | (pl.col("return_path_domain") == "")).cast(pl.Int8).alias("return_path_domain_missing")
+            pl.col("dkim_flag").fill_null("").str.to_lowercase().is_in(["fail", "none", "temperror"]).cast(pl.Int8).alias("dkim_flag_missing")
         ])
 
         df = df.drop(["links", "emails", "phone_numbers"], strict=False)
@@ -125,41 +124,7 @@ class FeatureExtraction():
         print(df)
         return df
 
-    def build_preprocessing_pipeline(self):
-        """Build preprocessing pipeline for numeric features"""
-        from sklearn.preprocessing import MinMaxScaler, FunctionTransformer
-        from sklearn.pipeline import Pipeline
-        from sklearn.compose import ColumnTransformer
-        from sklearn.impute import SimpleImputer
-        
-        log_features = [
-            "num_exclamation_marks", "num_uppercase_words", "num_malicious_links"
-        ]
-        
-        numeric_features = [
-            "sender_domain_entropy",
-            "spf_flag_missing", "dkim_flag_missing", "return_path_domain_missing",
-            "num_links", "subject_length", "body_length", "keyword_count", "num_received_headers", 
-        ]
-        
-        log_pipeline = Pipeline([
-            ("imputer", SimpleImputer(strategy="constant", fill_value=0)),
-            ("log", FunctionTransformer(np.log1p)),
-            ("scaler", MinMaxScaler())
-        ])
-        
-        numeric_pipeline = Pipeline([
-            ("imputer", SimpleImputer(strategy="constant", fill_value=0)),
-            ("scaler", MinMaxScaler())
-        ])
-        
-        preprocessor = ColumnTransformer([
-            ("log_numeric", log_pipeline, log_features),
-            ("numeric", numeric_pipeline, numeric_features)
-        ], remainder="drop")
-        
-        all_features = log_features + numeric_features
-        return preprocessor, all_features
+    
 
     def decode_mime_header(self, value: str) -> str:
         if not value:
@@ -212,7 +177,7 @@ class FeatureExtraction():
         return_path = msg.get("Return-Path", "") or ""
         return_path_clean = return_path.strip().strip("<>").replace('"', '')
         match = re.search(r'@([A-Za-z0-9.-]+\.[A-Za-z]{2,})', return_path_clean)
-        features["return_path_domain"] = match.group(1).lower() if match else ""
+
 
         # Body and links
         features["body_text"] = body_dict.get("text", "") or "unknown"
@@ -313,7 +278,6 @@ class FeatureExtraction():
             "num_received_headers": 0,
             "spf_flag": "",
             "dkim_flag": "",
-            "return_path_domain": "",
             "readability_score": 0.0,
             "special_char_ratio": 0.0
         }
@@ -376,7 +340,6 @@ class FeatureExtraction():
                     "spf_flag": "",
                     "dkim_flag": "",
                     "d_flag": "",
-                    "return_path_domain": "",
                     "readability_score": float(body_dict.get("readability_score", 0.0)),
                     "special_char_ratio": float(body_dict.get("special_char_ratio", 0.0)),
                 }
