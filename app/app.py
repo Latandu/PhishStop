@@ -10,7 +10,7 @@ from sentence_transformers import SentenceTransformer
 import xgboost as xgb
 from models.hybrid_mlp_model import HybridMLPClassifier
 from data_processing.feature_extraction import FeatureExtraction
-
+import polars as pl
 # Set page config
 st.set_page_config(
     page_title="PhishStop Email Analyzer",
@@ -33,6 +33,9 @@ def load_models():
     xgb_model = xgb.XGBClassifier()
     xgb_model.load_model('output/saved_models/xgboost_hybrid.json')
     
+    with open('output/saved_artifacts/svd_transformer.pkl', 'rb') as f:
+        svd_model = pickle.load(f)
+
     # 3. Load Hybrid MLP model and configuration
     with open('output/saved_artifacts/experiment_config.json', 'r') as f:
         config = json.load(f)
@@ -57,6 +60,7 @@ def load_models():
     feature_extractor = FeatureExtraction()
     
     return {
+        'svd_model': svd_model,
         'tfidf_vectorizer': tfidf_vectorizer,
         'tfidf_model': tfidf_model,
         'xgb_model': xgb_model,
@@ -70,7 +74,6 @@ def predict_all_models(subject, body, models):
     """Get predictions from all three models using FeatureExtraction.process_text"""
     try:
         # Use FeatureExtraction to process subject + body
-        # Language detection happens inside HTMLTransformer
         df = models['feature_extractor'].process_text(subject, body)
         
         if df is None:
@@ -80,13 +83,14 @@ def predict_all_models(subject, body, models):
         embeddings = models['sentence_model'].encode(
             df['body_subject'].to_list(),
             convert_to_numpy=True,
-            batch_size=1        )
+            batch_size=1
+        )
         
         # Extract engineered features (12 features from config)
         features_array = df.select(models['feature_names']).fill_null(0).to_numpy()
         
-        # Get the combined text for TF-IDF
-        combined_text = df['body_subject'][0]
+
+        combined_text = df['body_subject'][0] 
         
         # 1. TF-IDF Prediction
         from scipy.sparse import hstack
@@ -96,8 +100,9 @@ def predict_all_models(subject, body, models):
         tfidf_pred = "PHISHING" if tfidf_prob > 0.5 else "LEGITIMATE"
         
         # 2. Hybrid XGBoost Prediction
-        # Use full embeddings (no SVD)
-        xgb_input = np.concatenate([embeddings, features_array], axis=1)
+        embedding_svd = models['svd_model'].transform(embeddings)
+        # Concatenate for XGBoost
+        xgb_input = np.concatenate([embedding_svd, features_array], axis=1)
         xgb_prob = models['xgb_model'].predict_proba(xgb_input)[0][1]
         xgb_pred = "PHISHING" if xgb_prob > 0.5 else "LEGITIMATE"
         
@@ -122,15 +127,15 @@ def predict_from_eml(eml_path, models):
     try:
         # Use FeatureExtraction to process the .eml file
         # Language detection happens inside HTMLTransformer
-        df = models['feature_extractor'].process_eml_to_dataframe(eml_path)
-        
+        df = models['feature_extractor'].process_eml_to_dataframe(eml_path)        
         if df is None:
             raise Exception("Language check failed: Only English emails are supported. The models were trained on English text only.")
         
         # Generate embeddings using sentence transformer
         embeddings = models['sentence_model'].encode(
             df['body_subject'].to_list(),
-            convert_to_numpy=True,            batch_size=1
+            convert_to_numpy=True,
+            batch_size=1
         )
         
         # Extract engineered features (12 features from config)
@@ -144,11 +149,13 @@ def predict_from_eml(eml_path, models):
         tfidf_vec = models['tfidf_vectorizer'].transform([combined_text])
         X_tfidf_combined = hstack([tfidf_vec, features_array])
         tfidf_prob = models['tfidf_model'].predict_proba(X_tfidf_combined)[0][1]
+        print(tfidf_prob)
         tfidf_pred = "PHISHING" if tfidf_prob > 0.5 else "LEGITIMATE"
         
         # 2. Hybrid XGBoost Prediction
-        # Use full embeddings (no SVD)
-        xgb_input = np.concatenate([embeddings, features_array], axis=1)
+        # Apply SVD transformation to embeddings (same as manual entry)
+        embedding_svd = models['svd_model'].transform(embeddings)
+        xgb_input = np.concatenate([embedding_svd, features_array], axis=1)
         xgb_prob = models['xgb_model'].predict_proba(xgb_input)[0][1]
         xgb_pred = "PHISHING" if xgb_prob > 0.5 else "LEGITIMATE"
         
@@ -184,8 +191,10 @@ def display_results(results, df=None):
             st.error(results['tfidf']['prediction'])
         else:
             st.success(results['tfidf']['prediction'])
-        st.progress(results['tfidf']['confidence'] / 100)
-        st.caption(f"Confidence: {results['tfidf']['confidence']:.1f}%")
+        # Show confidence in the actual prediction
+        confidence = results['tfidf']['confidence'] if is_phishing else (100 - results['tfidf']['confidence'])
+        st.progress(confidence / 100)
+        st.caption(f"Confidence: {confidence:.1f}%")
     
     with col2:
         st.subheader("Hybrid XGBoost")
@@ -195,8 +204,10 @@ def display_results(results, df=None):
             st.error(results['xgboost']['prediction'])
         else:
             st.success(results['xgboost']['prediction'])
-        st.progress(results['xgboost']['confidence'] / 100)
-        st.caption(f"Confidence: {results['xgboost']['confidence']:.1f}%")
+
+        confidence = results['xgboost']['confidence'] if is_phishing else (100 - results['xgboost']['confidence'])
+        st.progress(confidence / 100)
+        st.caption(f"Confidence: {confidence:.1f}%")
     
     with col3:
         st.subheader("Hybrid MLP")
@@ -206,8 +217,10 @@ def display_results(results, df=None):
             st.error(results['hybrid']['prediction'])
         else:
             st.success(results['hybrid']['prediction'])
-        st.progress(results['hybrid']['confidence'] / 100)
-        st.caption(f"Confidence: {results['hybrid']['confidence']:.1f}%")
+        # Show confidence in the actual prediction
+        confidence = results['hybrid']['confidence'] if is_phishing else (100 - results['hybrid']['confidence'])
+        st.progress(confidence / 100)
+        st.caption(f"Confidence: {confidence:.1f}%")
     
     # Overall verdict
     avg_confidence = np.mean([results['tfidf']['confidence'], 
@@ -269,7 +282,6 @@ with tab2:
     uploaded_file = st.file_uploader("Upload an .eml file", type=['eml'], help="Upload a raw email file (.eml format)")
     
     if uploaded_file is not None:
-        # Save uploaded file temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix='.eml') as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             tmp_path = tmp_file.name
@@ -277,7 +289,6 @@ with tab2:
             with st.expander("Email Preview", expanded=False):
                 fe = FeatureExtraction()
                 features = fe.process_eml(tmp_path)
-                
                 st.markdown(f"**From:** {features.get('sender_email', 'N/A')}")
                 st.markdown(f"**To:** {features.get('receiver_email', 'N/A')}")
                 st.markdown(f"**Subject:** {features.get('subject', 'N/A')}")

@@ -22,7 +22,7 @@ import polars as pl
 import numpy as np
 import tldextract
 from scipy.stats import entropy
-
+from .preprocessing_pipeline import PreprocessingPipeline
 class FeatureExtraction():
 
     def domain_entropy(self, domain: Optional[str]) -> float:
@@ -257,7 +257,11 @@ class FeatureExtraction():
 
     def process_eml_to_dataframe(self, path: str) -> pl.DataFrame:
         features = self.process_eml(path)
-        return self.process_to_dataframe(features)
+        df = self.process_to_dataframe(features)
+        prerocessing_pipeline = PreprocessingPipeline()
+        
+        return prerocessing_pipeline.process_pipeline(df)
+    
         
     def process_text(self, subject: str, body_text: str) -> tuple[pl.DataFrame, np.ndarray]:
         features = {
