@@ -5,6 +5,8 @@
     "test_split": 0.2,
     "external_split": 0.2,
     "data_source": "emails_v4.parquet",
+    "phishing_threshold": 0.35,
+    "class_weight_ratio": 3.0,
     "numeric_features": [
       "sender_domain_entropy",
       "has_attachment",
@@ -45,6 +47,11 @@
     "mlp_batch_size": 64,
     "mlp_early_stopping": 10
   },
+  "aggressive_settings": {
+    "phishing_threshold": 0.35,
+    "class_weight_ratio": 3.0,
+    "description": "Models trained with aggressive phishing detection - lower threshold and higher penalties for False Negatives"
+  },
   "data_splits": {
     "train_size": 119121,
     "test_size": 39707,
@@ -53,50 +60,50 @@
   "model_performance": {
     "tfidf": {
       "test": {
-        "accuracy": 0.9724733674163246,
-        "precision": 0.9667776096822995,
-        "recall": 0.9670702179176756,
-        "f1": 0.966923891662884,
-        "roc_auc": 0.995926442772736
+        "accuracy": 0.9554990303976629,
+        "precision": 0.9092825833656993,
+        "recall": 0.9920096852300242,
+        "f1": 0.9488463653996468,
+        "roc_auc": 0.9963393792401207
       },
       "external": {
-        "accuracy": 0.8968002252040912,
-        "precision": 0.9280402449693789,
-        "recall": 0.8783769796087362,
-        "f1": 0.9025259239563945,
-        "roc_auc": 0.9632276165409006
+        "accuracy": 0.9125832785962278,
+        "precision": 0.8956185147838532,
+        "recall": 0.9500051754476763,
+        "f1": 0.9220105146837223,
+        "roc_auc": 0.9616438937740478
       }
     },
     "xgboost": {
       "test": {
-        "accuracy": 0.9812123806885436,
-        "precision": 0.9817959682345755,
-        "recall": 0.9728813559322034,
-        "f1": 0.9773183338400729,
-        "roc_auc": 0.9979689869636603
+        "accuracy": 0.9782406124864633,
+        "precision": 0.963963963963964,
+        "recall": 0.9845036319612591,
+        "f1": 0.9741255390512698,
+        "roc_auc": 0.9979260930004717
       },
       "external": {
-        "accuracy": 0.9260767570610866,
-        "precision": 0.9812821892535937,
-        "recall": 0.8808956974778318,
-        "f1": 0.9283831203069035,
-        "roc_auc": 0.982707774858687
+        "accuracy": 0.9351224547245942,
+        "precision": 0.9576520367183018,
+        "recall": 0.921471207259428,
+        "f1": 0.939213307309525,
+        "roc_auc": 0.9821943253860532
       }
     },
     "mlp": {
       "test": {
-        "accuracy": 0.9816657012617422,
-        "precision": 0.9711217183770883,
-        "recall": 0.985230024213075,
-        "f1": 0.978125,
-        "roc_auc": 0.9980090170652733
+        "accuracy": 0.9685445891152693,
+        "precision": 0.9365887129052547,
+        "recall": 0.9915254237288136,
+        "f1": 0.9632744273574642,
+        "roc_auc": 0.9978134090541468
       },
       "external": {
-        "accuracy": 0.9307309749460448,
-        "precision": 0.9593534326189611,
-        "recall": 0.9112583238450126,
-        "f1": 0.9346875940049192,
-        "roc_auc": 0.9797440952739194
+        "accuracy": 0.931087548090457,
+        "precision": 0.9313541702171172,
+        "recall": 0.9427940516854708,
+        "f1": 0.9370391961866877,
+        "roc_auc": 0.9806969253893874
       }
     }
   },
@@ -113,5 +120,5 @@
     "num_exclamation_marks",
     "num_malicious_links"
   ],
-  "timestamp": "2025-11-26T16:21:00.877805"
+  "timestamp": "2025-11-26T16:51:41.370101"
 }

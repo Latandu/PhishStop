@@ -28,13 +28,9 @@ def load_models():
         tfidf_vectorizer = pickle.load(f)
     with open('output/saved_models/tfidf_classifier.pkl', 'rb') as f:
         tfidf_model = pickle.load(f)
-    
-    # 2. Load Hybrid XGBoost model
+      # 2. Load Hybrid XGBoost model
     xgb_model = xgb.XGBClassifier()
     xgb_model.load_model('output/saved_models/xgboost_hybrid.json')
-    
-    with open('output/saved_artifacts/svd_transformer.pkl', 'rb') as f:
-        svd_model = pickle.load(f)
 
     # 3. Load Hybrid MLP model and configuration
     with open('output/saved_artifacts/experiment_config.json', 'r') as f:
@@ -53,14 +49,12 @@ def load_models():
     
     # Load sentence transformer for embeddings
     sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
-    
-    # Use feature names from experiment config (12 features used during training)
+      # Use feature names from experiment config (12 features used during training)
     feature_names = hybrid_config['numeric_features']
       # Initialize FeatureExtraction class
     feature_extractor = FeatureExtraction()
     
     return {
-        'svd_model': svd_model,
         'tfidf_vectorizer': tfidf_vectorizer,
         'tfidf_model': tfidf_model,
         'xgb_model': xgb_model,
@@ -98,11 +92,8 @@ def predict_all_models(subject, body, models):
         X_tfidf_combined = hstack([tfidf_vec, features_array])
         tfidf_prob = models['tfidf_model'].predict_proba(X_tfidf_combined)[0][1]
         tfidf_pred = "PHISHING" if tfidf_prob > 0.5 else "LEGITIMATE"
-        
-        # 2. Hybrid XGBoost Prediction
-        embedding_svd = models['svd_model'].transform(embeddings)
-        # Concatenate for XGBoost
-        xgb_input = np.concatenate([embedding_svd, features_array], axis=1)
+          # 2. Hybrid XGBoost Prediction
+        xgb_input = np.concatenate([embeddings, features_array], axis=1)
         xgb_prob = models['xgb_model'].predict_proba(xgb_input)[0][1]
         xgb_pred = "PHISHING" if xgb_prob > 0.5 else "LEGITIMATE"
         
@@ -151,11 +142,8 @@ def predict_from_eml(eml_path, models):
         tfidf_prob = models['tfidf_model'].predict_proba(X_tfidf_combined)[0][1]
         print(tfidf_prob)
         tfidf_pred = "PHISHING" if tfidf_prob > 0.5 else "LEGITIMATE"
-        
-        # 2. Hybrid XGBoost Prediction
-        # Apply SVD transformation to embeddings (same as manual entry)
-        embedding_svd = models['svd_model'].transform(embeddings)
-        xgb_input = np.concatenate([embedding_svd, features_array], axis=1)
+          # 2. Hybrid XGBoost Prediction
+        xgb_input = np.concatenate([embeddings, features_array], axis=1)
         xgb_prob = models['xgb_model'].predict_proba(xgb_input)[0][1]
         xgb_pred = "PHISHING" if xgb_prob > 0.5 else "LEGITIMATE"
         
