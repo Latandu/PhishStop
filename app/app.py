@@ -10,8 +10,9 @@ from sentence_transformers import SentenceTransformer
 import xgboost as xgb
 from models.hybrid_mlp_model import HybridMLPClassifier
 from data_processing.feature_extraction import FeatureExtraction
+from scipy.sparse import hstack
 import polars as pl
-# Set page config
+
 st.set_page_config(
     page_title="PhishStop Email Analyzer",
     page_icon="🛡️",
@@ -19,20 +20,16 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Cache model loading
 @st.cache_resource
 def load_models():
     """Load all three models"""
-    # 1. Load TF-IDF model
     with open('output/saved_models/tfidf_vectorizer.pkl', 'rb') as f:
         tfidf_vectorizer = pickle.load(f)
     with open('output/saved_models/tfidf_classifier.pkl', 'rb') as f:
         tfidf_model = pickle.load(f)
-      # 2. Load Hybrid XGBoost model
     xgb_model = xgb.XGBClassifier()
     xgb_model.load_model('output/saved_models/xgboost_hybrid.json')
 
-    # 3. Load Hybrid MLP model and configuration
     with open('output/saved_artifacts/experiment_config.json', 'r') as f:
         config = json.load(f)
     
@@ -43,15 +40,12 @@ def load_models():
         feature_hidden_dim=hybrid_config['mlp_feature_hidden_dim'],
         dropout=hybrid_config['mlp_dropout']
     )
+
     checkpoint = torch.load('output/saved_models/mlp_hybrid.pth', map_location='cpu')
     hybrid_model.load_state_dict(checkpoint['model_state_dict'])
     hybrid_model.eval()
-    
-    # Load sentence transformer for embeddings
     sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
-      # Use feature names from experiment config (12 features used during training)
     feature_names = hybrid_config['numeric_features']
-      # Initialize FeatureExtraction class
     feature_extractor = FeatureExtraction()
     
     return {
@@ -64,101 +58,62 @@ def load_models():
         'feature_extractor': feature_extractor
     }
 
-def predict_all_models(subject, body, models):
-    """Get predictions from all three models using FeatureExtraction.process_text"""
-    try:
-        # Use FeatureExtraction to process subject + body
-        df = models['feature_extractor'].process_text(subject, body)
-        
-        if df is None:
-            raise Exception("Only English emails are supported. The models were trained on English text only.")
-        
-        # Generate embeddings using sentence transformer
-        embeddings = models['sentence_model'].encode(
+def check_for_phsihing(prob):
+    return "PHISHING" if prob > 0.5 else "LEGITIMATE"
+
+def prediction(models, df):
+    embeddings = models['sentence_model'].encode(
             df['body_subject'].to_list(),
             convert_to_numpy=True,
             batch_size=1
-        )
+            )
         
-        # Extract engineered features (12 features from config)
-        features_array = df.select(models['feature_names']).fill_null(0).to_numpy()
-        
+    features_array = df.select(models['feature_names']).fill_null(0).to_numpy()
 
-        combined_text = df['body_subject'][0] 
+    tfidf_vec = models['tfidf_vectorizer'].transform([df['body_subject'][0]])
+    X_tfidf_combined = hstack([tfidf_vec, features_array])
+    tfidf_prob = models['tfidf_model'].predict_proba(X_tfidf_combined)[0][1]
+    tfidf_pred = check_for_phsihing(tfidf_prob)
+
+
+    xgb_input = np.concatenate([embeddings, features_array], axis=1)
+    xgb_prob = models['xgb_model'].predict_proba(xgb_input)[0][1]
+    xgb_pred = check_for_phsihing(xgb_prob)
+    
+    with torch.no_grad():
+        emb_tensor = torch.FloatTensor(embeddings)
+        feat_tensor = torch.FloatTensor(features_array)
+        hybrid_prob = torch.sigmoid(models['hybrid_model'](emb_tensor, feat_tensor)).item()
+    hybrid_pred = check_for_phsihing(hybrid_prob)
         
-        # 1. TF-IDF Prediction
-        from scipy.sparse import hstack
-        tfidf_vec = models['tfidf_vectorizer'].transform([combined_text])
-        X_tfidf_combined = hstack([tfidf_vec, features_array])
-        tfidf_prob = models['tfidf_model'].predict_proba(X_tfidf_combined)[0][1]
-        tfidf_pred = "PHISHING" if tfidf_prob > 0.5 else "LEGITIMATE"
-          # 2. Hybrid XGBoost Prediction
-        xgb_input = np.concatenate([embeddings, features_array], axis=1)
-        xgb_prob = models['xgb_model'].predict_proba(xgb_input)[0][1]
-        xgb_pred = "PHISHING" if xgb_prob > 0.5 else "LEGITIMATE"
-        
-        # 3. Hybrid MLP Prediction
-        with torch.no_grad():
-            emb_tensor = torch.FloatTensor(embeddings)
-            feat_tensor = torch.FloatTensor(features_array)
-            hybrid_prob = torch.sigmoid(models['hybrid_model'](emb_tensor, feat_tensor)).item()
-        hybrid_pred = "PHISHING" if hybrid_prob > 0.5 else "LEGITIMATE"
-        
-        return {
+    return {
             'tfidf': {'prediction': tfidf_pred, 'confidence': float(tfidf_prob * 100)},
             'xgboost': {'prediction': xgb_pred, 'confidence': float(xgb_prob * 100)},
             'hybrid': {'prediction': hybrid_pred, 'confidence': float(hybrid_prob * 100)}
         }, df
+
+
+
+def predict_all_models(subject, body, models):
+    try:
+        df = models['feature_extractor'].process_text(subject, body)
+        
+        if df is None:
+            raise Exception("Only English emails are supported. The models were trained on English text only.")
+                 
+        return prediction(models, df)
     except Exception as e:
         raise Exception(f"Error processing text: {str(e)}")
 
 
 def predict_from_eml(eml_path, models):
-    """Get predictions from .eml file using FeatureExtraction pipeline"""
     try:
-        # Use FeatureExtraction to process the .eml file
-        # Language detection happens inside HTMLTransformer
+
         df = models['feature_extractor'].process_eml_to_dataframe(eml_path)        
         if df is None:
             raise Exception("Language check failed: Only English emails are supported. The models were trained on English text only.")
-        
-        # Generate embeddings using sentence transformer
-        embeddings = models['sentence_model'].encode(
-            df['body_subject'].to_list(),
-            convert_to_numpy=True,
-            batch_size=1
-        )
-        
-        # Extract engineered features (12 features from config)
-        features_array = df.select(models['feature_names']).fill_null(0).to_numpy()
-        
-        # Get the combined text for TF-IDF
-        combined_text = df['body_subject'][0]
-        
-        # 1. TF-IDF Prediction
-        from scipy.sparse import hstack
-        tfidf_vec = models['tfidf_vectorizer'].transform([combined_text])
-        X_tfidf_combined = hstack([tfidf_vec, features_array])
-        tfidf_prob = models['tfidf_model'].predict_proba(X_tfidf_combined)[0][1]
-        print(tfidf_prob)
-        tfidf_pred = "PHISHING" if tfidf_prob > 0.5 else "LEGITIMATE"
-          # 2. Hybrid XGBoost Prediction
-        xgb_input = np.concatenate([embeddings, features_array], axis=1)
-        xgb_prob = models['xgb_model'].predict_proba(xgb_input)[0][1]
-        xgb_pred = "PHISHING" if xgb_prob > 0.5 else "LEGITIMATE"
-        
-        # 3. Hybrid MLP Prediction
-        with torch.no_grad():
-            emb_tensor = torch.FloatTensor(embeddings)
-            feat_tensor = torch.FloatTensor(features_array)
-            hybrid_prob = torch.sigmoid(models['hybrid_model'](emb_tensor, feat_tensor)).item()
-        hybrid_pred = "PHISHING" if hybrid_prob > 0.5 else "LEGITIMATE"
-        
-        return {
-            'tfidf': {'prediction': tfidf_pred, 'confidence': float(tfidf_prob * 100)},
-            'xgboost': {'prediction': xgb_pred, 'confidence': float(xgb_prob * 100)},
-            'hybrid': {'prediction': hybrid_pred, 'confidence': float(hybrid_prob * 100)}
-        }, df
+        return prediction(models, df)
+    
     except Exception as e:
         raise Exception(f"Error processing .eml file: {str(e)}")
 
@@ -168,7 +123,6 @@ def display_results(results, df=None):
     st.header("Analysis Results")
     st.markdown("---")
     
-    # Display results in columns
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -179,7 +133,6 @@ def display_results(results, df=None):
             st.error(results['tfidf']['prediction'])
         else:
             st.success(results['tfidf']['prediction'])
-        # Show confidence in the actual prediction
         confidence = results['tfidf']['confidence'] if is_phishing else (100 - results['tfidf']['confidence'])
         st.progress(confidence / 100)
         st.caption(f"Confidence: {confidence:.1f}%")
@@ -205,7 +158,6 @@ def display_results(results, df=None):
             st.error(results['hybrid']['prediction'])
         else:
             st.success(results['hybrid']['prediction'])
-        # Show confidence in the actual prediction
         confidence = results['hybrid']['confidence'] if is_phishing else (100 - results['hybrid']['confidence'])
         st.progress(confidence / 100)
         st.caption(f"Confidence: {confidence:.1f}%")
@@ -228,12 +180,95 @@ def display_results(results, df=None):
         st.info("Email appears legitimate. However, always verify the sender's identity before taking action.")
 
 
-# Main app
+
+def display_model_result(title, subtitle, prediction, confidence):
+    is_phishing = prediction == "PHISHING"
+    adjusted_conf = confidence if is_phishing else (100 - confidence)
+
+    st.subheader(title)
+    st.caption(subtitle)
+
+    if is_phishing:
+        st.error(prediction)
+    else:
+        st.success(prediction)
+
+    st.progress(adjusted_conf / 100)
+    st.caption(f"Confidence: {adjusted_conf:.1f}%")
+
+
+def display_results(results, df=None):
+    st.header("Analysis Results")
+    st.markdown("---")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        display_model_result(
+            "TF-IDF Model",
+            "Text-Only",
+            results['tfidf']['prediction'],
+            results['tfidf']['confidence']
+        )
+
+    with col2:
+        display_model_result(
+            "Hybrid XGBoost",
+            "Embeddings + Features",
+            results['xgboost']['prediction'],
+            results['xgboost']['confidence']
+        )
+
+    with col3:
+        display_model_result(
+            "Hybrid MLP",
+            "Embeddings + Features",
+            results['hybrid']['prediction'],
+            results['hybrid']['confidence']
+        )
+
+    avg_confidence = np.mean([
+        results['tfidf']['confidence'],
+        results['xgboost']['confidence'],
+        results['hybrid']['confidence']
+    ])
+
+    st.markdown("---")
+    st.subheader("Overall Assessment")
+
+    if avg_confidence > 50:
+        st.error("**HIGH RISK DETECTED**")
+        st.metric("Average Phishing Probability", f"{avg_confidence:.1f}%")
+        st.warning("Do not click any links or provide personal information. Report this email as phishing.")
+    else:
+        st.success("**LOW RISK DETECTED**")
+        st.metric("Average Phishing Probability", f"{avg_confidence:.1f}%")
+        st.info("Email appears legitimate. However, always verify the sender's identity before taking action.")
+
+
+def preview_eml_file(path, fe):
+    features = fe.process_eml(path)
+
+    with st.expander("Email Preview", expanded=False):
+        st.markdown(f"**From:** {features.get('sender_email', 'N/A')}")
+        st.markdown(f"**To:** {features.get('receiver_email', 'N/A')}")
+        st.markdown(f"**Subject:** {features.get('subject', 'N/A')}")
+        st.markdown(f"**Date:** {features.get('Date', 'N/A')}")
+        st.markdown("**Body:**")
+        st.text_area(
+            "Body Preview",
+            features.get('body_text', '')[:500] + "...",
+            height=150,
+            disabled=True,
+            label_visibility="collapsed",
+            key="preview"
+        )
+
+
 st.title("PhishStop Email Analyzer")
 st.markdown("Machine Learning-Based Phishing Detection")
 st.markdown("---")
 
-# Load models
 with st.spinner("Loading models..."):
     try:
         models = load_models()
@@ -242,19 +277,18 @@ with st.spinner("Loading models..."):
         st.error(f"Error loading models: {e}")
         st.stop()
 
-# Input section
 st.header("Email Analysis")
-st.info("ℹ️ **Note:** This tool only analyzes English emails. The models were trained on English text only.")
+st.info("**Note:** This tool analyzes English emails only. Models were trained on English text.")
 
-# Add tabs for different input methods
-tab1, tab2 = st.tabs(["Manual Entry", "Upload EML File"])
+tab_manual, tab_eml = st.tabs(["Manual Entry", "Upload EML File"])
 
-with tab1:
+
+
+with tab_manual:
     subject = st.text_input("Email Subject", placeholder="Re: Your account needs verification")
-    body = st.text_area("Email Body", height=200, 
+    body = st.text_area("Email Body", height=200,
                         placeholder="Dear user,\n\nYour account will be suspended unless you verify...")
-    
-    # Analyze button
+
     if st.button("Analyze Email", type="primary", use_container_width=True, key="manual"):
         if not subject or not body:
             st.warning("Please enter both subject and body")
@@ -266,24 +300,17 @@ with tab1:
                 except Exception as e:
                     st.error(f"Error analyzing email: {str(e)}")
 
-with tab2:
-    uploaded_file = st.file_uploader("Upload an .eml file", type=['eml'], help="Upload a raw email file (.eml format)")
-    
-    if uploaded_file is not None:
+
+with tab_eml:
+    uploaded_file = st.file_uploader("Upload an .eml file", type=['eml'])
+    if uploaded_file:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.eml') as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             tmp_path = tmp_file.name
         try:
-            with st.expander("Email Preview", expanded=False):
-                fe = FeatureExtraction()
-                features = fe.process_eml(tmp_path)
-                st.markdown(f"**From:** {features.get('sender_email', 'N/A')}")
-                st.markdown(f"**To:** {features.get('receiver_email', 'N/A')}")
-                st.markdown(f"**Subject:** {features.get('subject', 'N/A')}")
-                st.markdown(f"**Date:** {features.get('Date', 'N/A')}")
-                st.markdown("**Body:**")
-                st.text_area("Body Preview", features.get('body_text', '')[:500] + "...", height=150, disabled=True, key="preview", label_visibility="collapsed")
-            
+            fe = FeatureExtraction()
+            preview_eml_file(tmp_path, fe)
+
             if st.button("Analyze Uploaded Email", type="primary", use_container_width=True, key="eml"):
                 with st.spinner("Processing .eml file and analyzing..."):
                     try:
@@ -291,57 +318,43 @@ with tab2:
                         display_results(results, df)
                     except Exception as e:
                         st.error(f"Error analyzing email: {str(e)}")
+
         finally:
-            # Clean up temp file
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-# Sidebar with info
+
 with st.sidebar:
     st.header("About")
     st.markdown("""
-    This tool uses three different machine learning models to detect phishing emails:
-    
-    **1. TF-IDF + Logistic Regression**
-    - Text-based analysis
-    - Fast and interpretable
-    
-    **2. Hybrid XGBoost**
-    - SVD embeddings + numerical features
-    - Gradient boosting on combined features
-    
-    **3. Hybrid MLP**
-    - Combines embeddings + features
-    - Deep learning approach
-    
+    This tool uses three machine learning models to detect phishing emails:
+
+    **1. TF-IDF + Logistic Regression**  
+    - Text-based  
+    - Fast and interpretable  
+
+    **2. Hybrid XGBoost**  
+    - SVD embeddings + numerical features  
+
+    **3. Hybrid MLP**  
+    - Deep learning + feature fusion  
+
     ---
-    
-    ### ⚠️ Language Requirement
-    
-    **English Only:** This tool is designed to analyze English emails only. 
-    The models were trained exclusively on English text and may produce 
-    inaccurate results for other languages.
-    
+
+    ###Language Requirement  
+    **English Only:** Models were trained exclusively on English text.
+
     ---
-    
-    ### Input Methods
-    
-    **Manual Entry**
-    - Enter subject and body text directly
-    - Quick analysis for testing
-    
-    **Upload .EML File**
-    - Full email parsing with headers
-    - Extracts 17+ engineered features
-    - Authentication checks (SPF, DKIM, DMARC)
-    - Link analysis & malicious domain detection
-    - More accurate predictions
+
+    ### Input Methods  
+    **Manual Entry** – Quick analysis  
+    **Upload .EML File** – Full feature extraction & header analysis
     """)
-    
+
     st.markdown("---")
-    
+
     st.header("Disclaimer")
     st.markdown("""
-    This is an automated analysis tool for educational and research purposes. 
-    Always exercise caution with suspicious emails and verify sender authenticity.
+    This tool is for educational and research purposes only.  
+    Always exercise caution and verify suspicious emails.
     """)
