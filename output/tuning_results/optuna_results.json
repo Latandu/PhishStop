@@ -1,0 +1,51 @@
+{
+  "tfidf": {
+    "best_score": 0.9979556113986807,
+    "recall": 0.998365617433414,
+    "roc_auc": 0.9975456053639474,
+    "precision": 0.8429849220546894,
+    "f1_score": 0.9141194402106139,
+    "best_params": {
+      "max_features": 10000,
+      "min_df": 8,
+      "max_df": 0.95,
+      "ngram_max": 1,
+      "C": 1.299304926078878,
+      "class_weight_ratio": 9.0,
+      "threshold": 0.2
+    }
+  },
+  "xgboost": {
+    "best_score": 0.9963570532080941,
+    "recall": 0.9964891041162227,
+    "roc_auc": 0.9962250022999655,
+    "precision": 0.8070399058731248,
+    "f1_score": 0.8918142911316973,
+    "best_params": {
+      "max_depth": 8,
+      "n_estimators": 350,
+      "learning_rate": 0.02267537876243619,
+      "min_child_weight": 5,
+      "subsample": 0.95,
+      "colsample_bytree": 0.85,
+      "scale_pos_weight": 7.5,
+      "threshold": 0.2
+    }
+  },
+  "mlp": {
+    "best_score": 0.9951721174280361,
+    "recall": 0.9929176755447942,
+    "roc_auc": 0.9974265593112782,
+    "precision": 0.9053927250648562,
+    "f1_score": 0.9471374541675087,
+    "best_params": {
+      "feature_hidden_dim": 64,
+      "dropout": 0.5,
+      "lr": 0.0028961603572682073,
+      "weight_decay": 0.00011146976827416427,
+      "batch_size": 128,
+      "pos_weight": 8.5,
+      "threshold": 0.4
+    }
+  }
+}
