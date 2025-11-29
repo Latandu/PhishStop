@@ -5,11 +5,11 @@ import mailbox
 import polars as pl
 import logging
 from email.header import decode_header, make_header
-from .html_transformer import HTMLTransformer
-from helpers.transformers import ReceiverTransformer
-from helpers.transformers import AuthResultsParser
-from helpers.transformers import SenderTransformer
-from helpers.keywords import KEYWORDS
+from app.data_processing.html_transformer import HTMLTransformer
+from app.helpers.transformers import ReceiverTransformer
+from app.helpers.transformers import AuthResultsParser
+from app.helpers.transformers import SenderTransformer
+from app.helpers.keywords import KEYWORDS
 import torch
 from sentence_transformers import SentenceTransformer
 import ast
@@ -22,7 +22,7 @@ import polars as pl
 import numpy as np
 import tldextract
 from scipy.stats import entropy
-from .preprocessing_pipeline import PreprocessingPipeline
+from app.data_processing.preprocessing_pipeline import PreprocessingPipeline
 class FeatureExtraction():
 
     def domain_entropy(self, domain: Optional[str]) -> float:
@@ -119,6 +119,7 @@ class FeatureExtraction():
 
         cols_to_process = ["num_links", "subject_length", "body_length", "keyword_count", "num_received_headers", "sender_domain_entropy"]
         for col in cols_to_process:
+                
                 df = df.with_columns(pl.col(col).fill_null(0))
         df = df.with_columns(pl.col("has_attachment").fill_null(False))
         print(df)
@@ -250,6 +251,7 @@ class FeatureExtraction():
         )
         malicious_domains = self.load_malicious_domains()
         df = self.add_features(df, malicious_domains)
+        print(df.select(pl.col("body_length")).describe())
     
         
        # embeddings = self.prepare_embeddings(df)

@@ -1,12 +1,20 @@
 
-from feature_extraction import FeatureExtraction
+import sys
+from pathlib import Path
+
+# Add parent directory to path to allow absolute imports when running as script
+if __name__ == "__main__":
+    root_dir = Path(__file__).parent.parent.parent
+    sys.path.insert(0, str(root_dir))
+
+from app.data_processing.feature_extraction import FeatureExtraction
 import os
 import polars as pl
 fe = FeatureExtraction()
 
 dfs = []
 for i in range(2024, 2012, -1):
-    mbox_path = f"mbox_final_phish/phishing-{i}.mbox"
+    mbox_path = f"data/mbox_final_phish/phishing-{i}.mbox"
     df = fe.process_mbox(mbox_path, f"phishing-{i}", phishing=True)
     print(df)
     dfs.append(df)
@@ -38,6 +46,6 @@ for file in os.listdir(directory):
 final_df = pl.concat(dfs)
 fe.write_to_file(final_df, "emails_gmail.parquet")
 
-df = fe.process_mbox("data/fradulent_emails.mbox", f"phishing-nigerian", phishing=True)
+df = fe.process_mbox("data/mbox_final_phish/fradulent_emails.mbox", f"phishing-nigerian", phishing=True)
 print(df)
 fe.write_to_file(df, f"phishing_nigerian.parquet")
