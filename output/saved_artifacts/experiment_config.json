@@ -5,8 +5,6 @@
     "test_split": 0.2,
     "external_split": 0.2,
     "data_source": "emails_v4.parquet",
-    "phishing_threshold": 0.35,
-    "class_weight_ratio": 3.0,
     "numeric_features": [
       "sender_domain_entropy",
       "has_attachment",
@@ -22,35 +20,39 @@
     ],
     "embedding_model": "all-MiniLM-L6-v2",
     "embedding_dim": 384,
-    "svd_components": 100,
-    "tfidf_max_features": 5000,
+    "tfidf_max_features": 10000,
     "tfidf_ngram_range": [
       1,
-      2
+      1
     ],
-    "tfidf_min_df": 5,
-    "tfidf_max_df": 0.8,
+    "tfidf_min_df": 8,
+    "tfidf_max_df": 0.95,
+    "tfidf_threshold": 0.2,
     "lr_max_iter": 1000,
-    "lr_C": 1.0,
-    "xgb_max_depth": 9,
-    "xgb_n_estimators": 300,
-    "xgb_learning_rate": 0.1,
-    "xgb_min_child_weight": 7,
-    "xgb_subsample": 0.85,
+    "lr_C": 1.299304926078878,
+    "lr_class_weight_ratio": 9.0,
+    "xgb_max_depth": 8,
+    "xgb_n_estimators": 350,
+    "xgb_learning_rate": 0.02267537876243619,
+    "xgb_min_child_weight": 5,
+    "xgb_subsample": 0.95,
     "xgb_colsample_bytree": 0.85,
+    "xgb_scale_pos_weight": 7.5,
+    "xgb_threshold": 0.2,
     "xgb_early_stopping": 20,
-    "mlp_feature_hidden_dim": 32,
-    "mlp_dropout": 0.3,
-    "mlp_lr": 0.001,
-    "mlp_weight_decay": 0.0001,
+    "mlp_feature_hidden_dim": 64,
+    "mlp_dropout": 0.5,
+    "mlp_lr": 0.0028961603572682073,
+    "mlp_weight_decay": 0.00011146976827416427,
     "mlp_epochs": 50,
-    "mlp_batch_size": 64,
+    "mlp_batch_size": 128,
+    "mlp_pos_weight": 8.5,
+    "mlp_threshold": 0.4,
     "mlp_early_stopping": 10
   },
-  "aggressive_settings": {
-    "phishing_threshold": 0.35,
-    "class_weight_ratio": 3.0,
-    "description": "Models trained with aggressive phishing detection - lower threshold and higher penalties for False Negatives"
+  "optuna_optimized": {
+    "objective": " Recall + OC-AUC",
+    "description": "Hyperparameters optimized using Optuna for maximum recall and ranking ability"
   },
   "data_splits": {
     "train_size": 119121,
@@ -60,50 +62,50 @@
   "model_performance": {
     "tfidf": {
       "test": {
-        "accuracy": 0.9554990303976629,
-        "precision": 0.9092825833656993,
-        "recall": 0.9920096852300242,
-        "f1": 0.9488463653996468,
-        "roc_auc": 0.9963393792401207
+        "accuracy": 0.9219533079809605,
+        "precision": 0.8429849220546894,
+        "recall": 0.998365617433414,
+        "f1": 0.9141194402106139,
+        "roc_auc": 0.9975456053639474
       },
       "external": {
-        "accuracy": 0.9125832785962278,
-        "precision": 0.8956185147838532,
-        "recall": 0.9500051754476763,
-        "f1": 0.9220105146837223,
-        "roc_auc": 0.9616438937740478
+        "accuracy": 0.8727972224828751,
+        "precision": 0.8198185222526285,
+        "recall": 0.9819549391022323,
+        "f1": 0.893591635530158,
+        "roc_auc": 0.9683866361851214
       }
     },
     "xgboost": {
       "test": {
-        "accuracy": 0.9782406124864633,
-        "precision": 0.963963963963964,
-        "recall": 0.9845036319612591,
-        "f1": 0.9741255390512698,
-        "roc_auc": 0.9979260930004717
+        "accuracy": 0.8994132017024706,
+        "precision": 0.8070399058731248,
+        "recall": 0.9964891041162227,
+        "f1": 0.8918142911316973,
+        "roc_auc": 0.9962250022999655
       },
       "external": {
-        "accuracy": 0.9351224547245942,
-        "precision": 0.9576520367183018,
-        "recall": 0.921471207259428,
-        "f1": 0.939213307309525,
-        "roc_auc": 0.9821943253860532
+        "accuracy": 0.8828188045416159,
+        "precision": 0.8354527483551176,
+        "recall": 0.9769865093330573,
+        "f1": 0.9006934283351358,
+        "roc_auc": 0.9780326247171084
       }
     },
     "mlp": {
       "test": {
-        "accuracy": 0.9685445891152693,
-        "precision": 0.9365887129052547,
-        "recall": 0.9915254237288136,
-        "f1": 0.9632744273574642,
-        "roc_auc": 0.9978134090541468
+        "accuracy": 0.9564560404966379,
+        "precision": 0.9101547335145028,
+        "recall": 0.9934019370460049,
+        "f1": 0.949958033052589,
+        "roc_auc": 0.9976318201283991
       },
       "external": {
-        "accuracy": 0.931087548090457,
-        "precision": 0.9313541702171172,
-        "recall": 0.9427940516854708,
-        "f1": 0.9370391961866877,
-        "roc_auc": 0.9806969253893874
+        "accuracy": 0.9259266210002816,
+        "precision": 0.9107763995537179,
+        "recall": 0.9576303350239795,
+        "f1": 0.9336158904754697,
+        "roc_auc": 0.9796227016156034
       }
     }
   },
@@ -120,5 +122,5 @@
     "num_exclamation_marks",
     "num_malicious_links"
   ],
-  "timestamp": "2025-11-26T16:51:41.370101"
+  "timestamp": "2025-11-28T21:40:42.856903"
 }
