@@ -36,6 +36,8 @@ dependencies = [
     "chardet (>=5.2.0,<6.0.0)",
     "wordcloud (>=1.9.4,<2.0.0)",
     "plotly (>=6.5.0,<7.0.0)",
+    "optuna (>=4.6.0,<5.0.0)",
+    "optuna-integration[wandb] (>=4.6.0,<5.0.0)",
 ]
 
 [tool.poetry.dependencies]
