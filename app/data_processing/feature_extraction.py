@@ -5,11 +5,11 @@ import mailbox
 import polars as pl
 import logging
 from email.header import decode_header, make_header
-from app.data_processing.html_transformer import HTMLTransformer
-from app.helpers.transformers import ReceiverTransformer
-from app.helpers.transformers import AuthResultsParser
-from app.helpers.transformers import SenderTransformer
-from app.helpers.keywords import KEYWORDS
+from data_processing.html_transformer import HTMLTransformer
+from helpers.transformers import ReceiverTransformer
+from helpers.transformers import AuthResultsParser
+from helpers.transformers import SenderTransformer
+from helpers.keywords import KEYWORDS
 import torch
 from sentence_transformers import SentenceTransformer
 import ast
@@ -22,7 +22,7 @@ import polars as pl
 import numpy as np
 import tldextract
 from scipy.stats import entropy
-from app.data_processing.preprocessing_pipeline import PreprocessingPipeline
+from data_processing.preprocessing_pipeline import PreprocessingPipeline
 class FeatureExtraction():
 
     def domain_entropy(self, domain: Optional[str]) -> float:

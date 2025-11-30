@@ -1,15 +1,16 @@
 
 import sys
 from pathlib import Path
+import os
+import polars as pl
 
 # Add parent directory to path to allow absolute imports when running as script
 if __name__ == "__main__":
     root_dir = Path(__file__).parent.parent.parent
     sys.path.insert(0, str(root_dir))
-
-from app.data_processing.feature_extraction import FeatureExtraction
-import os
-import polars as pl
+    from app.data_processing.feature_extraction import FeatureExtraction
+else:
+    from data_processing.feature_extraction import FeatureExtraction
 fe = FeatureExtraction()
 
 dfs = []

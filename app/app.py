@@ -92,20 +92,6 @@ def prediction(models, df):
             'hybrid': {'prediction': hybrid_pred, 'confidence': float(hybrid_prob * 100)}
         }, df
 
-
-
-def predict_all_models(subject, body, models):
-    try:
-        df = models['feature_extractor'].process_text(subject, body)
-        
-        if df is None:
-            raise Exception("Only English emails are supported. The models were trained on English text only.")
-                 
-        return prediction(models, df)
-    except Exception as e:
-        raise Exception(f"Error processing text: {str(e)}")
-
-
 def predict_from_eml(eml_path, models):
     try:
 
@@ -280,30 +266,8 @@ with st.spinner("Loading models..."):
 st.header("Email Analysis")
 st.info("**Note:** This tool analyzes English emails only. Models were trained on English text.")
 
-tab_manual, tab_eml = st.tabs(["Manual Entry", "Upload EML File"])
-
-
-
-with tab_manual:
-    subject = st.text_input("Email Subject", placeholder="Re: Your account needs verification")
-    body = st.text_area("Email Body", height=200,
-                        placeholder="Dear user,\n\nYour account will be suspended unless you verify...")
-
-    if st.button("Analyze Email", type="primary", use_container_width=True, key="manual"):
-        if not subject or not body:
-            st.warning("Please enter both subject and body")
-        else:
-            with st.spinner("Analyzing..."):
-                try:
-                    results, df = predict_all_models(subject, body, models)
-                    display_results(results, df)
-                except Exception as e:
-                    st.error(f"Error analyzing email: {str(e)}")
-
-
-with tab_eml:
-    uploaded_file = st.file_uploader("Upload an .eml file", type=['eml'])
-    if uploaded_file:
+uploaded_file = st.file_uploader("Upload an .eml file", type=['eml'])
+if uploaded_file:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.eml') as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             tmp_path = tmp_file.name
@@ -347,7 +311,6 @@ with st.sidebar:
     ---
 
     ### Input Methods  
-    **Manual Entry** – Quick analysis  
     **Upload .EML File** – Full feature extraction & header analysis
     """)
 
