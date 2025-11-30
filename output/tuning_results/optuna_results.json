@@ -1,51 +1,51 @@
 {
   "tfidf": {
-    "best_score": 0.9979556113986807,
-    "recall": 0.998365617433414,
-    "roc_auc": 0.9975456053639474,
-    "precision": 0.8429849220546894,
-    "f1_score": 0.9141194402106139,
+    "best_score": 0.9795600055498764,
+    "recall": 0.9794794188861985,
+    "roc_auc": 0.9969891155507841,
+    "precision": 0.9622383444338725,
+    "f1_score": 0.970782337413007,
     "best_params": {
-      "max_features": 10000,
-      "min_df": 8,
-      "max_df": 0.95,
+      "max_features": 5000,
+      "min_df": 4,
+      "max_df": 0.75,
       "ngram_max": 1,
-      "C": 1.299304926078878,
-      "class_weight_ratio": 9.0,
-      "threshold": 0.2
+      "C": 4.02155452669029,
+      "class_weight_ratio": 1.5,
+      "threshold": 0.5
     }
   },
   "xgboost": {
-    "best_score": 0.9963570532080941,
-    "recall": 0.9964891041162227,
-    "roc_auc": 0.9962250022999655,
-    "precision": 0.8070399058731248,
-    "f1_score": 0.8918142911316973,
+    "best_score": 0.9842851156176371,
+    "recall": 0.9809322033898306,
+    "roc_auc": 0.9980693591769039,
+    "precision": 0.9749714216954455,
+    "f1_score": 0.9779427295495006,
     "best_params": {
-      "max_depth": 8,
-      "n_estimators": 350,
-      "learning_rate": 0.02267537876243619,
-      "min_child_weight": 5,
-      "subsample": 0.95,
-      "colsample_bytree": 0.85,
-      "scale_pos_weight": 7.5,
-      "threshold": 0.2
+      "max_depth": 10,
+      "n_estimators": 450,
+      "learning_rate": 0.08506410127049083,
+      "min_child_weight": 3,
+      "subsample": 0.7,
+      "colsample_bytree": 0.95,
+      "scale_pos_weight": 2.0,
+      "threshold": 0.4
     }
   },
   "mlp": {
-    "best_score": 0.9951721174280361,
-    "recall": 0.9929176755447942,
-    "roc_auc": 0.9974265593112782,
-    "precision": 0.9053927250648562,
-    "f1_score": 0.9471374541675087,
+    "best_score": 0.9853195766640783,
+    "recall": 0.9779055690072639,
+    "roc_auc": 0.9979200324219413,
+    "precision": 0.9826044644486345,
+    "f1_score": 0.9802493856375717,
     "best_params": {
-      "feature_hidden_dim": 64,
-      "dropout": 0.5,
-      "lr": 0.0028961603572682073,
-      "weight_decay": 0.00011146976827416427,
-      "batch_size": 128,
-      "pos_weight": 8.5,
-      "threshold": 0.4
+      "feature_hidden_dim": 32,
+      "dropout": 0.1,
+      "lr": 0.00020511104188433984,
+      "weight_decay": 1.3066739238053272e-05,
+      "batch_size": 32,
+      "pos_weight": 1.0,
+      "threshold": 0.5
     }
   }
 }
