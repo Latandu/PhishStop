@@ -113,7 +113,6 @@ def display_results(results, df=None):
     
     with col1:
         st.subheader("TF-IDF Model")
-        st.caption("Text-Only")
         is_phishing = results['tfidf']['prediction'] == "PHISHING"
         if is_phishing:
             st.error(results['tfidf']['prediction'])
@@ -181,55 +180,6 @@ def display_model_result(title, subtitle, prediction, confidence):
 
     st.progress(adjusted_conf / 100)
     st.caption(f"Confidence: {adjusted_conf:.1f}%")
-
-
-def display_results(results, df=None):
-    st.header("Analysis Results")
-    st.markdown("---")
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        display_model_result(
-            "TF-IDF Model",
-            "Text-Only",
-            results['tfidf']['prediction'],
-            results['tfidf']['confidence']
-        )
-
-    with col2:
-        display_model_result(
-            "Hybrid XGBoost",
-            "Embeddings + Features",
-            results['xgboost']['prediction'],
-            results['xgboost']['confidence']
-        )
-
-    with col3:
-        display_model_result(
-            "Hybrid MLP",
-            "Embeddings + Features",
-            results['hybrid']['prediction'],
-            results['hybrid']['confidence']
-        )
-
-    avg_confidence = np.mean([
-        results['tfidf']['confidence'],
-        results['xgboost']['confidence'],
-        results['hybrid']['confidence']
-    ])
-
-    st.markdown("---")
-    st.subheader("Overall Assessment")
-
-    if avg_confidence > 50:
-        st.error("**HIGH RISK DETECTED**")
-        st.metric("Average Phishing Probability", f"{avg_confidence:.1f}%")
-        st.warning("Do not click any links or provide personal information. Report this email as phishing.")
-    else:
-        st.success("**LOW RISK DETECTED**")
-        st.metric("Average Phishing Probability", f"{avg_confidence:.1f}%")
-        st.info("Email appears legitimate. However, always verify the sender's identity before taking action.")
 
 
 def preview_eml_file(path, fe):

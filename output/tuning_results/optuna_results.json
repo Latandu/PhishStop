@@ -1,51 +1,51 @@
 {
   "tfidf": {
-    "best_score": 0.9799043062200957,
-    "recall": 0.9917675544794189,
-    "roc_auc": 0.9973531496890582,
-    "precision": 0.9351598173515981,
-    "f1_score": 0.9626321974148061,
+    "best_score": 0.9790275030787028,
+    "recall": 0.9925281377092594,
+    "roc_auc": 0.997273827602883,
+    "precision": 0.9285082286321005,
+    "f1_score": 0.9594514285714286,
     "best_params": {
-      "max_features": 8000,
-      "min_df": 6,
-      "max_df": 0.6,
+      "max_features": 10000,
+      "min_df": 8,
+      "max_df": 0.9,
       "ngram_max": 2,
-      "C": 4.842855693488871,
-      "class_weight_ratio": 4.5,
-      "threshold": 0.4
+      "C": 5.537277379395257,
+      "class_weight_ratio": 8.5,
+      "threshold": 0.45
     }
   },
   "xgboost": {
-    "best_score": 0.9813506606230109,
-    "recall": 0.9855326876513317,
-    "roc_auc": 0.9978712240755261,
-    "precision": 0.9649715504978663,
-    "f1_score": 0.9751437470052707,
+    "best_score": 0.9770493035845189,
+    "recall": 0.9832592452473281,
+    "roc_auc": 0.9974182796132037,
+    "precision": 0.9529746081217344,
+    "f1_score": 0.9678800856531049,
     "best_params": {
       "max_depth": 7,
       "n_estimators": 400,
-      "learning_rate": 0.08981654015231944,
-      "min_child_weight": 1,
-      "subsample": 0.9,
-      "colsample_bytree": 0.8,
-      "scale_pos_weight": 5.5,
+      "learning_rate": 0.0846751074136459,
+      "min_child_weight": 7,
+      "subsample": 0.7,
+      "colsample_bytree": 0.95,
+      "scale_pos_weight": 7.0,
       "threshold": 0.45
     }
   },
   "mlp": {
-    "best_score": 0.9830404281478268,
-    "recall": 0.9873486682808716,
-    "roc_auc": 0.9980908511918727,
-    "precision": 0.9661769932472456,
-    "f1_score": 0.976648104903898,
+    "best_score": 0.9819457807459393,
+    "recall": 0.9845833727418897,
+    "roc_auc": 0.9982260254276327,
+    "precision": 0.971535230984601,
+    "f1_score": 0.9780157835400225,
     "best_params": {
       "feature_hidden_dim": 128,
-      "dropout": 0.30000000000000004,
-      "lr": 0.0002540994280961815,
-      "weight_decay": 0.0003358499007747041,
+      "dropout": 0.5,
+      "lr": 0.0005957412292147004,
+      "weight_decay": 0.00023686574806450268,
       "batch_size": 128,
-      "pos_weight": 5.0,
-      "threshold": 0.45
+      "pos_weight": 2.0,
+      "threshold": 0.4
     }
   }
 }
