@@ -1,0 +1,59 @@
+{
+  "hyperparameters": {
+    "feature_hidden_dim": 128,
+    "dropout": 0.2,
+    "lr": 0.00022281853152489702,
+    "weight_decay": 0.00023980345904032693,
+    "batch_size": 64,
+    "pos_weight": 5.0,
+    "threshold": 0.5
+  },
+  "optuna_results": {
+    "best_f2_score": 0.9815034117182653,
+    "recall": 0.9877045304076421,
+    "roc_auc": 0.9979272108455068,
+    "precision": 0.9574585128816356,
+    "f1_score": 0.9723463687150838
+  },
+  "test_performance": {
+    "accuracy": 0.9791601082918844,
+    "precision": 0.9636578519722263,
+    "recall": 0.987136803874092,
+    "f1": 0.9752560364805263,
+    "roc_auc": 0.9981157243037925
+  },
+  "external_performance": {
+    "accuracy": 0.9378624378342874,
+    "precision": 0.9626252432783103,
+    "recall": 0.9215402132284443,
+    "f1": 0.9416347899663311,
+    "roc_auc": 0.9817720904634237
+  },
+  "config": {
+    "random_seed": 42,
+    "data_source": "../../emails_v6.parquet",
+    "numeric_features": [
+      "sender_domain_entropy",
+      "has_attachment",
+      "spf_flag_missing",
+      "dkim_flag_missing",
+      "num_links",
+      "subject_length",
+      "body_length",
+      "keyword_count",
+      "num_received_headers",
+      "num_exclamation_marks",
+      "num_malicious_links"
+    ],
+    "embedding_model": "all-MiniLM-L6-v2",
+    "embedding_dim": 384,
+    "n_trials": 30
+  },
+  "data_splits": {
+    "train_size": 101649,
+    "val_size": 25413,
+    "test_size": 31766,
+    "external_size": 53285
+  },
+  "timestamp": "2025-12-02T14:37:50.506187"
+}
