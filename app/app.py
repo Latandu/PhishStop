@@ -113,6 +113,7 @@ def display_results(results, df=None):
     
     with col1:
         st.subheader("TF-IDF Model")
+        st.caption("Embeddings + Features")
         is_phishing = results['tfidf']['prediction'] == "PHISHING"
         if is_phishing:
             st.error(results['tfidf']['prediction'])
