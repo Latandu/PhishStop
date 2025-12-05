@@ -281,7 +281,7 @@ with st.sidebar:
     ---
 
     ### Input Methods  
-    **Upload .EML File** – Full feature extraction & header analysis
+    **Upload .EML File** - Full feature extraction & header analysis
     """)
 
     st.markdown("---")

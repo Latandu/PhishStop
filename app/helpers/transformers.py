@@ -119,9 +119,9 @@ class AuthResultsParser:
         return match.group(1) if match else ""
 
     def _extract_auth_host(self) -> str:
-        # bardziej ogólne: znajduje pierwszy hostname po "arc-authentication-results:"
+        # more general, finds first hostname after "arc-authentication-results:"
         match = re.search(r"arc[- ]?authentication[- ]?results:\s*([a-z0-9.\-]+)", self.raw, re.IGNORECASE)
         if not match:
-            # fallback — szuka po "authserv-id="
+            # fallback — searching after "authserv-id="
             match = re.search(r"authserv-id=([a-z0-9.\-]+)", self.text)
         return match.group(1) if match else ""
