@@ -186,17 +186,9 @@ def display_model_result(title, subtitle, prediction, confidence):
 def preview_eml_file(path, fe):
     try:
         features = fe.process_eml(path)
-    except ValueError as e:
-        error_msg = str(e)
-        if "Only English emails are supported" in error_msg:
-            st.warning("**Non-English Email Detected**\n\nThis email appears to be in a language other than English. The models were trained exclusively on English text and cannot analyze this email.")
-            return False
-        elif "Failed to read" in error_msg:
-            st.error("**File Error**\n\nThe uploaded file could not be read. Please ensure it is a valid .eml file.")
-            return False
-        else:
-            st.error(f"**Parsing Error**\n\n{error_msg}")
-            return False
+    except ValueError:
+        st.error(f"Only English emails are supported. The email appears to be in a different language or couldn't be correctly parsed.")
+        return False
     except Exception as e:
         st.error(f"**Unexpected Error**\n\nCould not process the email: {str(e)}")
         return False
