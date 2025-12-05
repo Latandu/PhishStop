@@ -207,11 +207,10 @@ def preview_eml_file(path, fe):
         st.markdown(f"**From:** {features.get('sender_email', 'N/A')}")
         st.markdown(f"**To:** {features.get('receiver_email', 'N/A')}")
         st.markdown(f"**Subject:** {features.get('subject', 'N/A')}")
-        st.markdown(f"**Date:** {features.get('Date', 'N/A')}")
         st.markdown("**Body:**")
         st.text_area(
             "Body Preview",
-            features.get('body_text', '')[:500] + "...",
+            features.get('body_text', '')[:1000] + "...",
             height=150,
             disabled=True,
             label_visibility="collapsed",
