@@ -184,7 +184,13 @@ def display_model_result(title, subtitle, prediction, confidence):
 
 
 def preview_eml_file(path, fe):
-    features = fe.process_eml(path)
+    try:
+        features = fe.process_eml(path)
+    except ValueError as e:
+        if "Only English emails are supported" in str(e):
+            st.warning("🌐 **Non-English Email Detected**\n\nThis email appears to be in a language other than English. The models were trained exclusively on English text and cannot analyze this email.")
+            return False
+        raise e
 
     with st.expander("Email Preview", expanded=False):
         st.markdown(f"**From:** {features.get('sender_email', 'N/A')}")
@@ -200,6 +206,7 @@ def preview_eml_file(path, fe):
             label_visibility="collapsed",
             key="preview"
         )
+    return True
 
 
 st.title("PhishStop Email Analyzer")
@@ -219,13 +226,15 @@ st.info("**Note:** This tool analyzes English emails only. Models were trained o
 
 uploaded_file = st.file_uploader("Upload an .eml file", type=['eml'])
 if uploaded_file:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.eml') as tmp_file:
-            tmp_file.write(uploaded_file.getvalue())
-            tmp_path = tmp_file.name
-        try:
-            fe = FeatureExtraction()
-            preview_eml_file(tmp_path, fe)
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.eml') as tmp_file:
+        tmp_file.write(uploaded_file.getvalue())
+        tmp_path = tmp_file.name
+    
+    try:
+        fe = FeatureExtraction()
+        is_english = preview_eml_file(tmp_path, fe)
 
+        if is_english:
             if st.button("Analyze Uploaded Email", type="primary", use_container_width=True, key="eml"):
                 with st.spinner("Processing .eml file and analyzing..."):
                     try:
@@ -234,9 +243,9 @@ if uploaded_file:
                     except Exception as e:
                         st.error(f"Error analyzing email: {str(e)}")
 
-        finally:
-            if os.path.exists(tmp_path):
-                os.unlink(tmp_path)
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
 
 with st.sidebar:
@@ -256,7 +265,7 @@ with st.sidebar:
 
     ---
 
-    ###Language Requirement  
+    ### Language Requirement  
     **English Only:** Models were trained exclusively on English text.
 
     ---
