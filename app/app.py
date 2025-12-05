@@ -187,10 +187,29 @@ def preview_eml_file(path, fe):
     try:
         features = fe.process_eml(path)
     except ValueError as e:
-        if "Only English emails are supported" in str(e):
-            st.warning("🌐 **Non-English Email Detected**\n\nThis email appears to be in a language other than English. The models were trained exclusively on English text and cannot analyze this email.")
+        error_msg = str(e)
+        if "Only English emails are supported" in error_msg:
+            st.warning("**Non-English Email Detected**\n\nThis email appears to be in a language other than English. The models were trained exclusively on English text and cannot analyze this email.")
             return False
-        raise e
+        elif "Failed to read" in error_msg:
+            st.error("**File Error**\n\nThe uploaded file could not be read. Please ensure it is a valid .eml file.")
+            return False
+        else:
+            st.error(f"**Parsing Error**\n\n{error_msg}")
+            return False
+    except Exception as e:
+        st.error(f"**Unexpected Error**\n\nCould not process the email: {str(e)}")
+        return False
+    if not features:
+        st.warning("**Empty Email**\n\nThe email file appears to be empty or could not be parsed properly.")
+        return False
+    
+    body_text = features.get('body_text', '').strip()
+    subject = features.get('subject', '').strip()
+    
+    if not body_text and not subject:
+        st.warning("**Empty Email Content**\n\nThe email has no body text or subject. Cannot perform analysis on empty content.")
+        return False
 
     with st.expander("Email Preview", expanded=False):
         st.markdown(f"**From:** {features.get('sender_email', 'N/A')}")
