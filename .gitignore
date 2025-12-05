@@ -13,3 +13,4 @@ phishstop/models/checkpoints/
 phishstop/models/logs/
 *.log
 *.png
+/app/models/mlp_training_pipeline.ipynb
