@@ -311,13 +311,12 @@ class FeatureExtraction():
                 if body_dict is None:
                     continue
                 
-                # Get text and subject, skip if either is None
                 body_text = body_dict.get("text")
                 subject = row.get("subject")
                 if body_text is None or subject is None:
                     continue
                 
-                # Parse sender and receiver
+
                 sender_name, sender_email = SenderTransformer.transform(row.get("sender", ""))
                 receiver_name, receiver_email = ReceiverTransformer.transform(row.get("receiver", ""))
                 sender_domain = sender_email.split("@")[-1] if "@" in sender_email else ""
@@ -359,11 +358,9 @@ class FeatureExtraction():
         if not all_features:
             raise ValueError(f"No valid rows found in CSV file: {input_csv_path}")
         
-        # Process through the same pipeline as other methods
         transformed_df = self.process_to_dataframe(all_features)
         print(f"Transformed shape: {transformed_df.shape}")
         
-        # Write to parquet
         self.write_to_file(transformed_df, output_parquet_path)
         print(f"Saved to {output_parquet_path}\n")
         
@@ -401,7 +398,6 @@ class FeatureExtraction():
         for msg in mbox:
             msg = email.message_from_bytes(msg.as_bytes())
 
-            # Extract features using shared method
             features = self._extract_features_from_message(msg, html_transformer, mbox_source, phishing)
             if features is None:
                 continue

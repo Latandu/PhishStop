@@ -1,12 +1,4 @@
 import polars as pl
-from sklearn.preprocessing import MinMaxScaler, FunctionTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
-from sklearn.decomposition import TruncatedSVD
-from preprocessing_pipeline import PreprocessingPipeline
-import numpy as np
-from pathlib import Path
 
 df_phishing = pl.read_parquet( "emails_phishing_jose.parquet").drop("Date", strict=False)
 df_csv = pl.read_parquet("emails_csv.parquet")
